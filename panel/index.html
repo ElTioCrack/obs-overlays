@@ -127,6 +127,11 @@ const S=[
   {h:"Cuenta atrás (opcional)",f:[{t:"countdown",ns:"brb"}]},
   {h:"Textos",f:[{t:"text",ns:"brb",k:"title",l:"Título",max:30},{t:"accent",ns:"brb",of:"title",l:"Palabra en dorado"},{t:"text",ns:"brb",k:"sub",l:"Subtítulo",max:60},{t:"text",ns:"brb",k:"community",l:"Nombre de tu comunidad",max:30}]},
   {h:"Ticker",f:[{t:"list",ns:"brb",k:"msgs",l:"Mensajes que pasan abajo",ph:"Nuevo mensaje",max:70}]}]},
+ {id:"tech",t:"Problemas técnicos",d:"Pantalla para cuando algo falla (cámara, juego, conexión).",pv:"screens/tech.html",g:[
+  {h:"Cuenta atrás (opcional)",f:[{t:"countdown",ns:"tech"}]},
+  {h:"Textos",f:[{t:"text",ns:"tech",k:"title",l:"Título",max:30},{t:"accent",ns:"tech",of:"title",l:"Palabra en dorado"},{t:"text",ns:"tech",k:"sub",l:"Subtítulo",max:60}]},
+  {h:"Estado",f:[{t:"list",ns:"tech",k:"status",l:"Mensajes que rotan en “Qué pasa”",ph:"Nuevo mensaje",max:45}]},
+  {h:"Ticker",f:[{t:"list",ns:"tech",k:"msgs",l:"Mensajes que pasan abajo",ph:"Nuevo mensaje",max:70}]}]},
  {id:"end",t:"Gracias por ver",d:"Pantalla final.",pv:"screens/ending.html",g:[
   {h:"Textos",f:[{t:"text",ns:"end",k:"title",l:"Título",max:30},{t:"accent",ns:"end",of:"title",l:"Palabra en dorado"},{t:"text",ns:"end",k:"sub",l:"Subtítulo",max:60},{t:"text",ns:"end",k:"next",l:"Próximo directo",max:30},{t:"text",ns:"end",k:"top",l:"Top apoyo",max:24}]},
   {h:"Agradecimientos",f:[{t:"list",ns:"end",k:"thanks",l:"Rotan en la tarjeta “Gracias a”",ph:"Nuevo agradecimiento",max:40}]},
@@ -201,7 +206,7 @@ function layoutPreview(reload){const W=orient==="h"?1920:1080,H=orient==="h"?108
  const isW=pvUrl.startsWith("widgets/"),u="../"+pvUrl+(pvUrl.includes("?")?"&":"?")+(isW?"demo=1&":"")+"pv="+orient;if(reload||fr.dataset.u!==u){fr.dataset.u=u;fr.src=u}}
 let pvT;function refreshPreview(now){clearTimeout(pvT);pvT=setTimeout(()=>{try{$("#frame").contentWindow.location.reload()}catch(e){layoutPreview(true)}},now?0:600)}
 /* ---------- cuenta atrás ---------- */
-function cdTick(){["start","brb"].forEach(ns=>{const e=$("#cdbig_"+ns);if(!e)return;const ea=+get(ns,"endAt")||0,r=Math.round((ea-Date.now())/1000);if(ea&&r>0){e.className="cdbig on";e.innerHTML=`${String(r/60|0).padStart(2,"0")}:${String(r%60).padStart(2,"0")}<small>en marcha</small>`}else{e.className="cdbig";e.innerHTML=`--:--<small>${ea?"terminada":"sin cuenta atrás"}</small>`}})}
+function cdTick(){["start","brb","tech"].forEach(ns=>{const e=$("#cdbig_"+ns);if(!e)return;const ea=+get(ns,"endAt")||0,r=Math.round((ea-Date.now())/1000);if(ea&&r>0){e.className="cdbig on";e.innerHTML=`${String(r/60|0).padStart(2,"0")}:${String(r%60).padStart(2,"0")}<small>en marcha</small>`}else{e.className="cdbig";e.innerHTML=`--:--<small>${ea?"terminada":"sin cuenta atrás"}</small>`}})}
 setInterval(cdTick,500);
 /* ---------- eventos de edición ---------- */
 function goalUI(ns){const v=+get(ns,"value")||0,g=Math.max(1,+get(ns,"goal")||1),p=Math.min(100,v/g*100),b=document.querySelector(`[data-goalbar="${ns}"]`),tx=document.querySelector(`[data-goaltxt="${ns}"]`);if(b)b.style.width=p+"%";if(tx)tx.textContent=`${v} / ${g} · ${Math.round(p)}%`}

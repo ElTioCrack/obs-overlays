@@ -1,13 +1,13 @@
 const Q=new URLSearchParams(location.search);
 // config compartida (shared/config.js) editable desde el panel; se recarga sola si cambia
 const PAGE=location.pathname.split("/").pop().replace(".html","");
-const NS=({"starting":"start","starting-vertical":"start","brb":"brb","ending":"end"})[PAGE]||PAGE;
+const NS=({"starting":"start","starting-vertical":"start","brb":"brb","tech":"tech","ending":"end"})[PAGE]||PAGE;
 const CFG_URL=new URL("config.js",document.currentScript.src).href.split("?")[0];
 document.write('<script src="'+CFG_URL+"?t="+Date.now()+'"><\/script>');
 // vista previa del panel: si estamos dentro del panel, usar el borrador sin guardar
 try{if(window.parent!==window&&window.parent.__DRAFT_CFG)window.__DRAFT=window.parent.__DRAFT_CFG}catch(e){}
 const P=(k,d)=>{const q=Q.get(k);if(q!=null)return q;const c=window.__DRAFT||window.CFG||{},has=o=>o&&o[k]!=null&&o[k]!=="";return has(c[NS])?c[NS][k]:has(c.global)?c.global[k]:d};
-addEventListener("load",()=>{if(window.__DRAFT)return;const snap=JSON.stringify(window.CFG||{});setInterval(()=>{const s=document.createElement("script");s.src=CFG_URL+"?t="+Date.now();s.onload=()=>{s.remove();if(JSON.stringify(window.CFG||{})!==snap)location.reload()};s.onerror=()=>s.remove();document.head.appendChild(s)},2000)});
+addEventListener("load",()=>{if(window.__DRAFT)return;const snap=JSON.stringify(window.CFG||{});setInterval(()=>{const s=document.createElement("script");s.src=CFG_URL+"?t="+Date.now();s.onload=()=>{s.remove();const c=window.CFG;if(!c||typeof c!=="object"||!c.global){window.CFG=JSON.parse(snap);return}/* config rota: se mantiene la última válida */if(JSON.stringify(c)!==snap)location.reload()};s.onerror=()=>s.remove();document.head.appendChild(s)},2000)});
 if(Q.get("accent"))document.documentElement.style.setProperty("--a","#"+Q.get("accent"));
 const LOW=Q.get("motion")==="low"||matchMedia("(prefers-reduced-motion: reduce)").matches;
 if(LOW)document.documentElement.classList.add("low-motion");
@@ -22,7 +22,7 @@ const enter=(el,o={})=>el.animate([{opacity:0,transform:o.from||"translateY(24px
 const leave=(el,o={})=>el.animate([{opacity:1,transform:"none"},{opacity:0,transform:o.to||"translateY(-12px)"}],{duration:LOW?1:(o.d||260),easing:EASE.in,fill:"both"}).finished;
 // cola FIFO global: nunca se montan alertas
 const queue=[];let playing=false;
-const enqueue=fn=>{queue.push(fn);if(!playing)next()};
+const enqueue=fn=>{if(queue.length>=20)queue.shift();/* cola limitada: se descarta lo más antiguo */queue.push(fn);if(!playing)next()};
 async function next(){const fn=queue.shift();if(!fn){playing=false;return}playing=true;try{await fn()}catch(e){}next()}
 // contador con easing
 function countTo(el,to,d=900){const from=+(el.dataset.value||0),t0=performance.now();const f=t=>{const p=Math.min((t-t0)/d,1),e=1-Math.pow(1-p,3);el.textContent=Math.round(from+(to-from)*e).toLocaleString("es");if(p<1)requestAnimationFrame(f);else el.dataset.value=to};requestAnimationFrame(f)}

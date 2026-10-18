@@ -25,6 +25,7 @@ window.CFG={
   "endAt": 0,
   "msgs": "Vuelvo en un momento|Gracias por quedarte|Deja tu like mientras esperas|Escribe en el chat"
  },
+ "tech": {"title":"Problemas técnicos","accent":"técnicos","sub":"Lo estamos arreglando · no te vayas","status":"Estamos solucionando un fallo|Volvemos en cuanto esté listo|Gracias por la paciencia","msgs":"Estamos resolviendo un problema técnico|Volvemos enseguida|Gracias por quedarte","min":5,"endAt":0},
  "end": {
   "title": "Gracias por ver",
   "accent": "ver",
@@ -36,7 +37,7 @@ window.CFG={
  },
  "cta": {
   "texts": "Sígueme|Deja un like|Comparte el directo",
-  "sec": 6
+  "sec": 10
  },
  "socials": {
   "list": "TikTok:el_tio_crack|GitHub:ElTioCrack|Facebook:Ilian.Felipez"
