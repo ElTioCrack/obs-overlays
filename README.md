@@ -22,13 +22,13 @@ Añade una fuente **Navegador** con:
 
 Tamaño de la fuente = el indicado en la galería (por ejemplo, `600×140`).
 
-## Cambiar textos
+## Cambiar textos (panel de control)
 
-- **Local (recomendado):** doble clic en `Panel.bat` → editas en el navegador → **Guardar**. Los overlays se actualizan solos en ~2 s.
-- **Desde GitHub:** edita `shared/config.js` y haz commit; las fuentes que usen la URL de GitHub Pages se actualizan al publicarse.
+El panel tiene editores fáciles: listas con **＋ Añadir**, **🗑 eliminar**, **↑ ↓** y **arrastrar ⠿**; redes con desplegable; encuesta con % y "Repartir igual"; metas con − / +; cuenta atrás con botones de 3–20 min; palabra dorada con un clic; **vista previa en vivo** sin guardar; deshacer/rehacer (Ctrl+Z / Ctrl+Y); presets; exportar/importar.
+
+- **Local:** doble clic en `Panel.bat` (primero descarga lo último de GitHub). Al guardar, OBS se actualiza en ~2 s. En **Más ▾** puedes activar *Subir a GitHub al guardar*.
+- **Web:** https://eltiocrack.github.io/obs-overlays/panel/ → **Más ▾ → Conectar GitHub** y pega un *fine-grained token* con permiso **Contents: Read and write** solo para este repo. Se guarda únicamente en tu navegador. Al guardar se hace un commit; las fuentes de OBS que usen la URL de GitHub Pages lo ven en 1–2 min.
 - **Por URL:** cualquier valor se puede forzar con parámetros, p. ej. `screens/starting.html?min=10&game=Minecraft`.
-
-> El panel necesita el servidor local (`panel/server.py`, Python 3). En GitHub Pages la galería y los overlays funcionan, pero el botón Guardar del panel no.
 
 ## Opciones útiles
 

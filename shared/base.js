@@ -4,8 +4,10 @@ const PAGE=location.pathname.split("/").pop().replace(".html","");
 const NS=({"starting":"start","starting-vertical":"start","brb":"brb","ending":"end"})[PAGE]||PAGE;
 const CFG_URL=new URL("config.js",document.currentScript.src).href.split("?")[0];
 document.write('<script src="'+CFG_URL+"?t="+Date.now()+'"><\/script>');
-const P=(k,d)=>{const q=Q.get(k);if(q!=null)return q;const c=window.CFG||{},has=o=>o&&o[k]!=null&&o[k]!=="";return has(c[NS])?c[NS][k]:has(c.global)?c.global[k]:d};
-addEventListener("load",()=>{const snap=JSON.stringify(window.CFG||{});setInterval(()=>{const s=document.createElement("script");s.src=CFG_URL+"?t="+Date.now();s.onload=()=>{s.remove();if(JSON.stringify(window.CFG||{})!==snap)location.reload()};s.onerror=()=>s.remove();document.head.appendChild(s)},2000)});
+// vista previa del panel: si estamos dentro del panel, usar el borrador sin guardar
+try{if(window.parent!==window&&window.parent.__DRAFT_CFG)window.__DRAFT=window.parent.__DRAFT_CFG}catch(e){}
+const P=(k,d)=>{const q=Q.get(k);if(q!=null)return q;const c=window.__DRAFT||window.CFG||{},has=o=>o&&o[k]!=null&&o[k]!=="";return has(c[NS])?c[NS][k]:has(c.global)?c.global[k]:d};
+addEventListener("load",()=>{if(window.__DRAFT)return;const snap=JSON.stringify(window.CFG||{});setInterval(()=>{const s=document.createElement("script");s.src=CFG_URL+"?t="+Date.now();s.onload=()=>{s.remove();if(JSON.stringify(window.CFG||{})!==snap)location.reload()};s.onerror=()=>s.remove();document.head.appendChild(s)},2000)});
 if(Q.get("accent"))document.documentElement.style.setProperty("--a","#"+Q.get("accent"));
 const LOW=Q.get("motion")==="low"||matchMedia("(prefers-reduced-motion: reduce)").matches;
 if(LOW)document.documentElement.classList.add("low-motion");

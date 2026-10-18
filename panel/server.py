@@ -1,5 +1,5 @@
 """Panel de control de los overlays: sirve la carpeta y guarda shared/config.js. Solo escucha en este PC."""
-import json, os, re, webbrowser
+import json, os, re, subprocess, webbrowser
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from functools import partial
 
@@ -44,6 +44,8 @@ class Handler(SimpleHTTPRequestHandler):
         return super().do_GET()
 
     def do_POST(self):
+        if self.path == "/api/publish":
+            return self._publish()
         if self.path != "/api/config":
             return self._json(404, {"error": "no existe"})
         try:
@@ -55,6 +57,24 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json(200, {"ok": True})
         except Exception as e:
             return self._json(400, {"error": str(e)})
+
+    def _publish(self):
+        """Sube shared/config.js a GitHub (git add + commit + push)."""
+        def git(*args):
+            return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, timeout=60)
+        try:
+            git("add", "shared/config.js")
+            if git("diff", "--cached", "--quiet").returncode == 0:
+                return self._json(200, {"ok": True, "msg": "No había cambios que subir"})
+            c = git("commit", "-m", "Panel: actualizar textos de los overlays")
+            if c.returncode != 0:
+                raise RuntimeError(c.stderr.strip() or c.stdout.strip())
+            p = git("push")
+            if p.returncode != 0:
+                raise RuntimeError(p.stderr.strip())
+            return self._json(200, {"ok": True, "msg": "Subido a GitHub"})
+        except Exception as e:
+            return self._json(500, {"error": str(e)})
 
     def log_message(self, fmt, *args):
         pass
