@@ -1,0 +1,92 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Panel overlays</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400..700&display=swap">
+<style>
+:root{--bg:#000;--el:rgba(255,255,255,.04);--el2:rgba(255,255,255,.07);--line:rgba(255,255,255,.1);--fg:#fff;--mut:#a0a0a0;--sub:#888;--gold:#d4a24e;--gold2:#e8b968;--goldsoft:rgba(212,162,78,.15);--ease:cubic-bezier(.16,1,.3,1)}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 "Familjen Grotesk","Segoe UI",system-ui,sans-serif}
+::selection{background:var(--goldsoft);color:var(--gold2)}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:16px;padding:14px 24px;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#000;background:linear-gradient(135deg,#e8b968,#d4a24e 55%,#b9863a)}
+header h1{font-size:17px;margin:0;font-weight:600}header small{color:var(--mut);font-size:12px;letter-spacing:.2em;text-transform:uppercase;display:block}
+.sp{flex:1}
+#status{font-size:13px;color:var(--mut);display:flex;align-items:center;gap:8px}#status i{width:8px;height:8px;border-radius:50%;background:#666}#status.ok i{background:#5fd28a}#status.dirty i{background:var(--gold)}#status.err i{background:#ff6b6b}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--el2);color:var(--fg);padding:9px 16px;transition:background .2s,border-color .2s,transform .15s}
+button:hover{background:rgba(255,255,255,.12)}button:active{transform:scale(.97)}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+button.primary{background:linear-gradient(135deg,#e8b968,#d4a24e 55%,#b9863a);color:#000;border-color:transparent;font-weight:700}
+main{display:grid;grid-template-columns:200px minmax(0,1fr) minmax(0,520px);gap:24px;padding:24px;max-width:1500px;margin:0 auto}
+nav{display:flex;flex-direction:column;gap:4px;position:sticky;top:86px;align-self:start}
+nav button{text-align:left;background:transparent;border-color:transparent;color:var(--mut)}nav button.on{background:var(--el2);color:var(--fg);border-color:var(--line)}nav button.on::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);margin-right:10px;vertical-align:middle}
+section{display:none}section.on{display:block;animation:in .4s var(--ease)}@keyframes in{from{opacity:0;transform:translateY(8px)}}
+h2{font-size:24px;margin:0 0 4px;font-weight:600;letter-spacing:-.01em}.lead{color:var(--mut);margin:0 0 20px}
+.grp{background:var(--el);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px;display:grid;gap:14px}
+.grp h3{margin:0;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+label{display:grid;gap:6px;font-size:13px;color:var(--mut)}
+input,textarea{font:inherit;color:var(--fg);background:#0b0b0b;border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;caret-color:var(--gold)}
+textarea{min-height:96px;resize:vertical}input[type=range]{padding:0;accent-color:var(--gold)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.hint{font-size:12px;color:var(--sub)}
+.cdrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.cdrow b{color:var(--gold2);font-variant-numeric:tabular-nums}
+aside{position:sticky;top:86px;align-self:start}
+.pv{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#000;position:relative}
+.pv iframe{border:0;transform-origin:0 0;display:block}
+.pvbar{display:flex;gap:8px;margin-bottom:10px;align-items:center}.pvbar span{color:var(--mut);font-size:13px;margin-right:auto}
+.pvbar button{padding:6px 12px;font-size:13px}.pvbar button.on{border-color:var(--gold);color:var(--gold2)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,20px);opacity:0;background:#111;border:1px solid var(--gold);color:var(--fg);padding:10px 18px;border-radius:12px;transition:all .35s var(--ease);pointer-events:none}.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (max-width:1100px){main{grid-template-columns:1fr}nav{flex-direction:row;flex-wrap:wrap;position:static}aside{position:static}}
+</style></head><body>
+<header><div class="av" id="av">E</div><div><h1>Panel de overlays</h1><small>Cambios en vivo en OBS</small></div><div class="sp"></div><div id="status"><i></i><span>Cargando…</span></div><button class="primary" id="save">Guardar</button></header>
+<main><nav id="nav"></nav><div id="forms"></div>
+<aside><div class="pvbar"><span>Vista previa</span><button data-o="h" class="on">Horizontal</button><button data-o="v">Vertical</button></div><div class="pv" id="pv"><iframe id="frame"></iframe></div><p class="hint">La vista previa usa lo último guardado.</p></aside></main>
+<div class="toast" id="toast"></div>
+<script>
+// esquema: [ns, clave, etiqueta, tipo]  tipos: text | lines (una por línea) | num | pct
+const SECTIONS=[
+ {id:"global",t:"General",d:"Datos que usan todos los overlays.",pv:"screens/starting.html",groups:[{h:"Canal",f:[["global","name","Tu nombre / usuario","text"],["global","game","Juego de hoy","text"]]},{h:"Redes",f:[["socials","list","Redes (una por línea, formato Red:usuario)","lines"]]}]},
+ {id:"start",t:"Inicio",d:"Pantalla de “Empezamos pronto”.",pv:"screens/starting.html",cd:"start",groups:[
+   {h:"Textos",f:[["start","title","Título","text"],["start","accent","Palabra en dorado (del título)","text"],["start","sub","Subtítulo","text"],["start","go","Texto al llegar a cero","text"]]},
+   {h:"Tarjetas",f:[["start","dur","Duración","text"],["start","goalLabel","Nombre de la meta","text"],["start","goal","Meta (texto)","text"],["start","goalP","Progreso de la meta","pct"]]},
+   {h:"Ticker",f:[["start","msgs","Mensajes del ticker (uno por línea)","lines"]]}]},
+ {id:"brb",t:"Vuelvo enseguida",d:"Pantalla de pausa.",pv:"screens/brb.html",cd:"brb",groups:[
+   {h:"Textos",f:[["brb","title","Título","text"],["brb","accent","Palabra en dorado","text"],["brb","sub","Subtítulo","text"],["brb","community","Nombre de la comunidad","text"]]},
+   {h:"Ticker",f:[["brb","msgs","Mensajes del ticker (uno por línea)","lines"]]}]},
+ {id:"end",t:"Gracias por ver",d:"Pantalla final.",pv:"screens/ending.html",groups:[
+   {h:"Textos",f:[["end","title","Título","text"],["end","accent","Palabra en dorado","text"],["end","sub","Subtítulo","text"],["end","next","Próximo directo","text"],["end","top","Top apoyo","text"]]},
+   {h:"Listas",f:[["end","thanks","Agradecimientos (uno por línea)","lines"],["end","msgs","Mensajes del ticker (uno por línea)","lines"]]}]},
+ {id:"widgets",t:"Widgets",d:"Elementos que van encima del juego.",pv:"widgets/goal.html",groups:[
+   {h:"CTA rotativo",f:[["cta","texts","Frases (una por línea)","lines"],["cta","sec","Segundos por frase","num"]]},
+   {h:"Meta de seguidores",f:[["goal","label","Nombre","text"],["goal","value","Actual","num"],["goal","goal","Objetivo","num"]]},
+   {h:"Meta de regalos",f:[["gift-goal","label","Nombre","text"],["gift-goal","value","Actual","num"],["gift-goal","goal","Objetivo","num"]]},
+   {h:"Contador",f:[["counter","label","Nombre","text"],["counter","value","Valor","num"]]},
+   {h:"Lower third",f:[["lower-third","title","Título","text"],["lower-third","sub","Subtítulo","text"]]},
+   {h:"Encuesta",f:[["poll","q","Pregunta","text"],["poll","opts","Opciones (una por línea, formato Opción:porcentaje)","lines"]]},
+   {h:"Pregunta del chat",f:[["question","user","Usuario","text"],["question","text","Pregunta","text"]]},
+   {h:"Ticker y recordatorio",f:[["ticker","text","Ticker (uno por línea)","lines"],["follow-popup","every","Recordatorio de seguir cada (segundos)","num"]]}]}
+];
+let CFG={},dirty=false,cur="global",orient="h";
+const $=s=>document.querySelector(s),st=$("#status");
+const setStatus=(c,t)=>{st.className=c;st.querySelector("span").textContent=t};
+const toast=t=>{const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("on"),1800)};
+const get=(ns,k)=>(CFG[ns]||{})[k];
+const set=(ns,k,v)=>{(CFG[ns]=CFG[ns]||{})[k]=v;dirty=true;setStatus("dirty","Cambios sin guardar")};
+function field([ns,k,lab,type]){const v=get(ns,k)??"";const id=`f_${ns}_${k}`;
+ if(type==="lines")return `<label for="${id}">${lab}<textarea id="${id}" data-ns="${ns}" data-k="${k}" data-t="lines">${String(v).split("|").join("\n")}</textarea></label>`;
+ if(type==="pct")return `<label for="${id}">${lab} · <b id="${id}_o">${Math.round((+v||0)*100)}%</b><input id="${id}" type="range" min="0" max="100" value="${Math.round((+v||0)*100)}" data-ns="${ns}" data-k="${k}" data-t="pct"></label>`;
+ return `<label for="${id}">${lab}<input id="${id}" ${type==="num"?'type="number"':'type="text"'} value="${String(v).replace(/"/g,"&quot;")}" data-ns="${ns}" data-k="${k}" data-t="${type}"></label>`}
+function cdBlock(ns){return `<div class="grp"><h3>Cuenta atrás</h3><div class="row">${field([ns,"min","Minutos","num"])}<div></div></div><div class="cdrow"><button class="primary" data-cd="${ns}">Iniciar cuenta atrás ahora</button><button data-cdoff="${ns}">Quitar</button><span id="cd_${ns}" class="hint"></span></div><p class="hint">Se guarda la hora final exacta: aunque OBS recargue, no se reinicia.</p></div>`}
+function render(){$("#nav").innerHTML=SECTIONS.map(s=>`<button data-s="${s.id}" class="${s.id===cur?"on":""}">${s.t}</button>`).join("");
+ $("#forms").innerHTML=SECTIONS.map(s=>`<section id="s_${s.id}" class="${s.id===cur?"on":""}"><h2>${s.t}</h2><p class="lead">${s.d}</p>${s.cd?cdBlock(s.cd):""}${s.groups.map(g=>`<div class="grp"><h3>${g.h}</h3>${g.f.map(field).join("")}</div>`).join("")}</section>`).join("");
+ $("#av").textContent=(get("global","name")||"E")[0].toUpperCase();cdInfo();preview()}
+function cdInfo(){["start","brb"].forEach(ns=>{const e=$("#cd_"+ns);if(!e)return;const ea=+get(ns,"endAt")||0,r=Math.round((ea-Date.now())/1000);e.innerHTML=ea&&r>0?`Termina en <b>${String(r/60|0).padStart(2,"0")}:${String(r%60).padStart(2,"0")}</b>`:"Sin cuenta atrás activa"})}
+setInterval(cdInfo,1000);
+function preview(){const s=SECTIONS.find(x=>x.id===cur);const pv=$("#pv"),fr=$("#frame");const W=orient==="h"?1920:1080,H=orient==="h"?1080:1920;const w=pv.parentElement.clientWidth||480,sc=Math.min(w/W,(orient==="h"?1:0.62)*w/W*(orient==="h"?1:1.6));const scale=orient==="h"?w/W:Math.min(w/W,640/H);
+ fr.width=W;fr.height=H;fr.style.transform=`scale(${scale})`;pv.style.height=H*scale+"px";pv.style.width=W*scale+"px";const url="/"+s.pv+(s.pv.includes("widgets/")?"?demo=1":"");if(fr.dataset.u!==url+orient){fr.dataset.u=url+orient;fr.src=url}}
+document.addEventListener("input",e=>{const t=e.target;if(!t.dataset.ns)return;let v=t.value;if(t.dataset.t==="lines")v=v.split("\n").map(x=>x.trim()).filter(Boolean).join("|");else if(t.dataset.t==="num")v=v===""?"":+v;else if(t.dataset.t==="pct"){v=+v/100;$("#"+t.id+"_o").textContent=t.value+"%"}set(t.dataset.ns,t.dataset.k,v)});
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.s){cur=b.dataset.s;document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b));document.querySelectorAll("section").forEach(x=>x.classList.toggle("on",x.id==="s_"+cur));preview()}
+ if(b.dataset.o){orient=b.dataset.o;document.querySelectorAll(".pvbar button").forEach(x=>x.classList.toggle("on",x===b));preview()}
+ if(b.dataset.cd){const ns=b.dataset.cd;set(ns,"endAt",Date.now()+(+get(ns,"min")||5)*60000);save();cdInfo()}
+ if(b.dataset.cdoff){set(b.dataset.cdoff,"endAt",0);save();cdInfo()}});
+async function load(){try{CFG=await (await fetch("/api/config")).json();render();setStatus("ok","Guardado")}catch(e){setStatus("err","No se pudo cargar (¿está abierto Panel.bat?)")}}
+async function save(){try{const r=await fetch("/api/config",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(CFG)});if(!r.ok)throw new Error((await r.json()).error);dirty=false;setStatus("ok","Guardado · OBS se actualiza en ~2 s");toast("Guardado ✓");$("#av").textContent=(get("global","name")||"E")[0].toUpperCase();setTimeout(()=>{const f=$("#frame");f.src=f.src},400)}catch(e){setStatus("err","Error al guardar: "+e.message)}}
+$("#save").onclick=save;addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="s"){e.preventDefault();save()}});
+addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue=""}});addEventListener("resize",preview);
+load();
+</script></body></html>

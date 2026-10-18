@@ -1,0 +1,20 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Marco gameplay</title><link rel="stylesheet" href="../shared/base.css?v=4"><style>@property --ang{syntax:"<angle>";inherits:false;initial-value:0deg}
+:root{--rad:18px;--th:3px}
+.fr{position:fixed;inset:6px;border-radius:var(--rad)}
+.base{border:1px solid rgba(255,255,255,.12)}.mask{position:fixed;inset:6px;border-radius:var(--rad);box-shadow:0 0 0 40px #000}
+.lt,.gl{padding:var(--th);background:conic-gradient(from var(--ang),transparent 0deg 30deg,#b9863a 65deg,#fff2d0 90deg,#e8b968 108deg,transparent 150deg 210deg,rgba(192,192,192,.5) 250deg,#fff 270deg,rgba(192,192,192,.5) 290deg,transparent 330deg);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spin var(--spd,6s) linear infinite}
+.gl{filter:blur(8px);opacity:.9;padding:calc(var(--th) + 3px)}
+@keyframes spin{to{--ang:360deg}}
+.c{position:fixed;width:46px;height:46px;border:3px solid var(--color-accent);animation:cp 3s ease-in-out infinite}
+.c.tl{left:2px;top:2px;border-right:0;border-bottom:0;border-top-left-radius:calc(var(--rad) + 8px)}
+.c.tr{right:2px;top:2px;border-left:0;border-bottom:0;border-top-right-radius:calc(var(--rad) + 8px);animation-delay:.75s}
+.c.br{right:2px;bottom:2px;border-left:0;border-top:0;border-bottom-right-radius:calc(var(--rad) + 8px);animation-delay:1.5s}
+.c.bl{left:2px;bottom:2px;border-right:0;border-top:0;border-bottom-left-radius:calc(var(--rad) + 8px);animation-delay:2.25s}
+@keyframes cp{50%{opacity:.35;transform:scale(.9)}}
+.ticks{position:fixed;left:50%;top:0;transform:translateX(-50%);display:flex;gap:6px}
+.ticks i{width:18px;height:3px;border-radius:2px;background:rgba(255,255,255,.25);animation:tk 1.8s ease-in-out infinite}
+.ticks i:nth-child(2){animation-delay:.2s}.ticks i:nth-child(3){animation-delay:.4s}
+@keyframes tk{50%{background:var(--color-accent)}}
+.tag{position:fixed;display:inline-flex;align-items:center;gap:.5em;padding:.4em .9em;font-size:20px;font-weight:700;letter-spacing:.14em;border-radius:10px;text-transform:uppercase}
+.tag.bl{left:26px;bottom:26px}.tag.tl{left:26px;top:26px}
+.in{animation:in 700ms var(--ease-out) both}</style></head><body><div class="mask"></div><div class="fr base in"></div><div class="fr gl"></div><div class="fr lt"></div><i class="c tl"></i><i class="c tr"></i><i class="c br"></i><i class="c bl"></i><div class="ticks"><i></i><i></i><i></i></div><script src="../shared/base.js?v=4"></script><script>if(Q.get("r"))document.documentElement.style.setProperty("--rad",Q.get("r")+"px");if(Q.get("spd"))document.documentElement.style.setProperty("--spd",Q.get("spd")+"s");</script></body></html>
