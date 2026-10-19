@@ -117,6 +117,7 @@ const NETS=["TikTok","GitHub","Facebook","Instagram","YouTube","Twitch","X","Dis
 const S=[
  {id:"global",t:"General",d:"Datos que usan todos los overlays.",pv:"screens/starting.html",g:[
   {h:"Canal",f:[{t:"text",ns:"global",k:"name",l:"Tu nombre / usuario",max:24},{t:"text",ns:"global",k:"game",l:"Juego de hoy",max:30}]},
+  {h:"Tiempo en directo",pv:"widgets/uptime.html",f:[{t:"uptime",ns:"global"}]},
   {h:"Redes sociales",pv:"widgets/socials.html?mode=all",f:[{t:"socials",ns:"socials",k:"list",l:"Tus redes"}]}]},
  {id:"start",t:"Inicio",d:"Pantalla de “Empezamos pronto”.",pv:"screens/starting.html",g:[
   {h:"Cuenta atrás",f:[{t:"countdown",ns:"start"}]},
@@ -173,6 +174,7 @@ function F(f){switch(f.t){
  case"goaltext":{const m=String(get(f.ns,"goal")||"0 / 100").match(/(\d+)\s*\/\s*(\d+)/)||[0,0,100];const v=+m[1],g=+m[2]||1,p=Math.min(100,v/g*100);return `<div class="f"><div class="lab">${f.l}<small data-gttxt>${v} / ${g} · ${Math.round(p)}%</small></div><div class="row2"><div class="step"><button class="icon" data-step="-1" data-for="gt_v" aria-label="Menos">−</button><input id="gt_v" type="number" min="0" data-gt="${f.ns}" value="${v}" aria-label="Actual"><button class="icon" data-step="1" data-for="gt_v" aria-label="Más">+</button></div><div class="step"><span class="hint">de</span><input id="gt_g" type="number" min="1" data-gt="${f.ns}" value="${g}" aria-label="Objetivo"></div></div><div class="prog"><i data-gtbar style="width:${p}%"></i></div></div>`}
  case"accent":{const words=String(get(f.ns,f.of)||"").split(/\s+/).filter(Boolean),a=String(get(f.ns,"accent")||"").toLowerCase();return `<div class="f" data-accent="${f.ns}"><div class="lab">${f.l}<small>toca una palabra del título</small></div><div class="words">${words.map(w=>`<button data-acc="${f.ns}" data-w="${esc(w)}" class="${w.toLowerCase()===a?"on":""}">${esc(w)}</button>`).join("")}<button class="ghost" data-acc="${f.ns}" data-w="">Ninguna</button></div></div>`}
  case"countdown":return `<div class="cd" data-cd="${f.ns}"><div class="cdbig" id="cdbig_${f.ns}">--:--<small>sin cuenta atrás</small></div><div class="f"><div class="lab">Duración</div><div class="chips">${[3,5,10,15,20].map(m=>`<button data-min="${m}" data-ns="${f.ns}" class="${+get(f.ns,"min")===m?"on":""}">${m} min</button>`).join("")}</div><div class="chips"><button class="primary" data-cdgo="${f.ns}">▶ Iniciar ahora</button><button data-cdadd="${f.ns}">+1 min</button><button class="danger" data-cdstop="${f.ns}">■ Parar</button></div><div class="hint">Estos botones se aplican al instante (guardan solos). Aunque OBS recargue, la cuenta no se reinicia.</div></div></div>`
+ case"uptime":return `<div class="cd"><div class="cdbig" id="upbig">--:--<small>automático</small></div><div class="f"><div class="chips"><button class="primary" data-up="now">▶ Empezar ahora</button><button data-up="now">↺ Reiniciar a 0</button><button data-up="auto">Automático con OBS</button></div><div class="hint">Automático: arranca solo al encender la emisión, la grabación o la cámara virtual de OBS, y no se reinicia al cambiar de escena. Si usas la cámara virtual del dock Vertical y no arranca, pulsa “Empezar ahora”.</div></div></div>`
  case"list":return listF(f,split(get(f.ns,f.k)).map(x=>[x]))
  case"socials":return listF(f,split(get(f.ns,f.k)).map(x=>{const p=x.indexOf(":");return p<0?["TikTok",x]:[x.slice(0,p),x.slice(p+1)]}))
  case"poll":return listF(f,split(get(f.ns,f.k)).map(x=>{const p=x.lastIndexOf(":");return p<0?[x,0]:[x.slice(0,p),+x.slice(p+1)||0]}))
@@ -206,7 +208,8 @@ function layoutPreview(reload){const W=orient==="h"?1920:1080,H=orient==="h"?108
  const isW=pvUrl.startsWith("widgets/"),u="../"+pvUrl+(pvUrl.includes("?")?"&":"?")+(isW?"demo=1&":"")+"pv="+orient;if(reload||fr.dataset.u!==u){fr.dataset.u=u;fr.src=u}}
 let pvT;function refreshPreview(now){clearTimeout(pvT);pvT=setTimeout(()=>{try{$("#frame").contentWindow.location.reload()}catch(e){layoutPreview(true)}},now?0:600)}
 /* ---------- cuenta atrás ---------- */
-function cdTick(){["start","brb","tech"].forEach(ns=>{const e=$("#cdbig_"+ns);if(!e)return;const ea=+get(ns,"endAt")||0,r=Math.round((ea-Date.now())/1000);if(ea&&r>0){e.className="cdbig on";e.innerHTML=`${String(r/60|0).padStart(2,"0")}:${String(r%60).padStart(2,"0")}<small>en marcha</small>`}else{e.className="cdbig";e.innerHTML=`--:--<small>${ea?"terminada":"sin cuenta atrás"}</small>`}})}
+function cdTick(){const ub=$("#upbig");if(ub){const ls=+get("global","liveStart")||0;if(ls){const t=Math.max(0,(Date.now()-ls)/1000|0);ub.className="cdbig on";ub.innerHTML=`${String(t/3600|0).padStart(2,"0")}:${String(t/60%60|0).padStart(2,"0")}:${String(t%60).padStart(2,"0")}<small>manual · desde el panel</small>`}else{ub.className="cdbig";ub.innerHTML=`--:--<small>automático con OBS</small>`}}
+ ["start","brb","tech"].forEach(ns=>{const e=$("#cdbig_"+ns);if(!e)return;const ea=+get(ns,"endAt")||0,r=Math.round((ea-Date.now())/1000);if(ea&&r>0){e.className="cdbig on";e.innerHTML=`${String(r/60|0).padStart(2,"0")}:${String(r%60).padStart(2,"0")}<small>en marcha</small>`}else{e.className="cdbig";e.innerHTML=`--:--<small>${ea?"terminada":"sin cuenta atrás"}</small>`}})}
 setInterval(cdTick,500);
 /* ---------- eventos de edición ---------- */
 function goalUI(ns){const v=+get(ns,"value")||0,g=Math.max(1,+get(ns,"goal")||1),p=Math.min(100,v/g*100),b=document.querySelector(`[data-goalbar="${ns}"]`),tx=document.querySelector(`[data-goaltxt="${ns}"]`);if(b)b.style.width=p+"%";if(tx)tx.textContent=`${v} / ${g} · ${Math.round(p)}%`}
@@ -232,6 +235,7 @@ document.addEventListener("click",async e=>{
  if(b.dataset.min){set(b.dataset.ns,"min",+b.dataset.min);b.parentElement.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));return}
  if(b.dataset.cdgo){const ns=b.dataset.cdgo;set(ns,"endAt",Date.now()+(+get(ns,"min")||5)*60000);cdTick();return save("Cuenta atrás iniciada")}
  if(b.dataset.cdadd){const ns=b.dataset.cdadd,ea=+get(ns,"endAt")||0;set(ns,"endAt",(ea>Date.now()?ea:Date.now())+60000);cdTick();return save("+1 minuto")}
+ if(b.dataset.up){set("global","liveStart",b.dataset.up==="now"?Date.now():0);cdTick();return save(b.dataset.up==="now"?"Contador en marcha desde ahora":"Contador en automático")}
  if(b.dataset.cdstop){set(b.dataset.cdstop,"endAt",0);cdTick();return save("Cuenta atrás parada")}
  const L=b.closest(".f")?.querySelector(".list");if(!L)return;
  if(b.dataset.add!=null){const items=readList(L);items.push([...BLANK[L.dataset.list]]);return rerenderList(L,items,items.length-1)}

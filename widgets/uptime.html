@@ -1,1 +1,23 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Tiempo en vivo</title><link rel="stylesheet" href="../shared/base.css?v=3"><style>body{padding:20px}</style></head><body><div class="pill in"><span class="dot live"></span><span id="u"></span></div><script src="../shared/base.js?v=3"></script><script>const s=Date.now()-(+P("start",0))*1000;let gold=false;const tick=()=>{const t=(Date.now()-s)/1000|0;roll(u,pad(t/3600|0)+":"+pad(t/60%60|0)+":"+pad(t%60));if(t>=3600&&!gold){gold=true;u.classList.add("gold-text");shimmer(u)}};tick();setInterval(tick,1000)</script></body></html>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Tiempo en vivo</title><link rel="stylesheet" href="../shared/base.css?v=5"><style>body{padding:20px}.pill .dot{transition:background .4s,opacity .4s}.pill.off .dot{background:var(--color-text-subtle);animation:none}.pill.off #u{color:var(--color-text-muted)}</style></head><body><div class="pill in off" id="pill"><span class="dot live"></span><span id="u">00:00:00</span></div><script src="../shared/base.js?v=5"></script><script>
+/* Tiempo en directo que NO se reinicia al cambiar de escena ni al recargar.
+   Prioridad: 1) hora fijada desde el panel (global.liveStart)
+              2) automático con OBS: arranca con emisión / grabación / cámara virtual y se para al apagarlas
+              3) fuera de OBS (vista previa): cuenta desde la primera carga */
+const KEY="uptime.start",MAX=14*3600e3;
+const stored=()=>{try{const v=+localStorage.getItem(KEY);return v&&Date.now()-v<MAX?v:0}catch(e){return 0}};
+const store=v=>{try{v?localStorage.setItem(KEY,String(v)):localStorage.removeItem(KEY)}catch(e){}};
+let start=0,running=false,gold=false;
+function run(s){start=s;running=true;pill.classList.remove("off")}
+function halt(){running=false;start=0;pill.classList.add("off");roll(u,"00:00:00");gold=false;u.classList.remove("gold-text")}
+const manual=+P("liveStart",0),offset=(+P("start",0))*1000;
+if(manual>0&&Date.now()-manual<MAX){run(manual-offset)}
+else if(window.obsstudio&&obsstudio.getStatus){
+ const sync=()=>obsstudio.getStatus(s=>{const on=s&&(s.streaming||s.recording||s.virtualcam);if(on){if(!running){const st=stored()||Date.now();store(st);run(st-offset)}}else{store(0);halt()}});
+ sync();
+ ["obsStreamingStarted","obsRecordingStarted","obsVirtualcamStarted"].forEach(ev=>addEventListener(ev,()=>{if(!running){const st=stored()||Date.now();store(st);run(st-offset)}}));
+ ["obsStreamingStopped","obsRecordingStopped","obsVirtualcamStopped"].forEach(ev=>addEventListener(ev,()=>setTimeout(sync,300)));
+ setInterval(sync,15000);
+}else{const st=stored()||Date.now();store(st);run(st-offset)}
+const tick=()=>{if(!running)return;const t=Math.max(0,(Date.now()-start)/1000|0);roll(u,pad(t/3600|0)+":"+pad(t/60%60|0)+":"+pad(t%60));if(t>=3600&&!gold){gold=true;u.classList.add("gold-text");shimmer(u)}};
+tick();setInterval(tick,1000);
+</script></body></html>
